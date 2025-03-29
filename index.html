@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RIP Stats Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #e9ecef;
+    }
+
+    input[type="number"], input[type="text"] {
+      width: 80px;
+      padding: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    input[type="text"] {
+      width: 100px;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: #ffffff;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      justify-content: space-between;
+    }
+
+    form input, form button {
+      flex: 1 0 110px;
+    }
+
+    form button {
+      padding: 8px 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    form button:hover {
+      background-color: #218838;
+    }
+
+    .delete-btn, .edit-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+    }
+
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+
+    .edit-btn {
+      background-color: #007bff;
+      margin-right: 5px;
+    }
+
+    .edit-btn:hover {
+      background-color: #0069d9;
+    }
+
+    .highlight-top {
+      background-color: #d4edda;
+    }
+  </style>
+</head>
+<body>
+  <h1>RIP Stats Table</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th colspan="4">Infantry</th>
+        <th colspan="4">Lancer</th>
+        <th colspan="4">Marksman</th>
+        <th>Power</th>
+        <th>Actions</th>
+      </tr>
+      <tr>
+        <th></th>
+        <th>Atk</th><th>Def</th><th>Leth</th><th>HP</th>
+        <th>Atk</th><th>Def</th><th>Leth</th><th>HP</th>
+        <th>Atk</th><th>Def</th><th>Leth</th><th>HP</th>
+        <th></th><th></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <h2>Add New Entry</h2>
+  <form id="addForm">
+    <input type="text" placeholder="Name" id="name" required>
+    <input type="number" placeholder="Inf Atk" id="ia">
+    <input type="number" placeholder="Inf Def" id="id">
+    <input type="number" placeholder="Inf Leth" id="il">
+    <input type="number" placeholder="Inf HP" id="ih">
+
+    <input type="number" placeholder="Lan Atk" id="la">
+    <input type="number" placeholder="Lan Def" id="ld">
+    <input type="number" placeholder="Lan Leth" id="ll">
+    <input type="number" placeholder="Lan HP" id="lh">
+
+    <input type="number" placeholder="Mar Atk" id="ma">
+    <input type="number" placeholder="Mar Def" id="md">
+    <input type="number" placeholder="Mar Leth" id="ml">
+    <input type="number" placeholder="Mar HP" id="mh">
+
+    <button type="submit">Add</button>
+  </form>
+
+  <script>
+    const api = '/api/stats';
+
+    function calculatePower(p) {
+      const atk = +p.infantry_attack + +p.lancer_attack + +p.marksman_attack;
+      const def = +p.infantry_defence + +p.lancer_defence + +p.marksman_defence;
+      const leth = +p.infantry_lethality + +p.lancer_lethality + +p.marksman_lethality;
+      const hp = +p.infantry_health + +p.lancer_health + +p.marksman_health;
+      return (atk * 1.5 + def * 1.2 + leth * 1.3 + hp * 1.0).toFixed(2);
+    }
+
+    async function loadData() {
+      const res = await fetch(api);
+      let data = await res.json();
+
+      data.forEach(p => p.power = calculatePower(p));
+      data.sort((a, b) => b.power - a.power);
+
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      data.forEach((entry, index) => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-id', entry.id);
+        if (index === 0) tr.classList.add("highlight-top");
+
+        tr.innerHTML = `
+          <td><input type="text" value="${entry.name}" readonly></td>
+          <td><input type="number" value="${entry.infantry_attack}" readonly></td>
+          <td><input type="number" value="${entry.infantry_defence}" readonly></td>
+          <td><input type="number" value="${entry.infantry_lethality}" readonly></td>
+          <td><input type="number" value="${entry.infantry_health}" readonly></td>
+          <td><input type="number" value="${entry.lancer_attack}" readonly></td>
+          <td><input type="number" value="${entry.lancer_defence}" readonly></td>
+          <td><input type="number" value="${entry.lancer_lethality}" readonly></td>
+          <td><input type="number" value="${entry.lancer_health}" readonly></td>
+          <td><input type="number" value="${entry.marksman_attack}" readonly></td>
+          <td><input type="number" value="${entry.marksman_defence}" readonly></td>
+          <td><input type="number" value="${entry.marksman_lethality}" readonly></td>
+          <td><input type="number" value="${entry.marksman_health}" readonly></td>
+          <td><strong>${entry.power}</strong></td>
+          <td>
+            <button class="edit-btn" onclick="toggleEdit(this)">Edit</button>
+            <button class="delete-btn" onclick="remove(${entry.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function toggleEdit(button) {
+      const row = button.closest('tr');
+      const inputs = row.querySelectorAll('input');
+      const isEditing = button.textContent === 'Save';
+
+      if (isEditing) {
+        const id = row.getAttribute('data-id');
+        const fields = [
+          'name',
+          'infantry_attack', 'infantry_defence', 'infantry_lethality', 'infantry_health',
+          'lancer_attack', 'lancer_defence', 'lancer_lethality', 'lancer_health',
+          'marksman_attack', 'marksman_defence', 'marksman_lethality', 'marksman_health'
+        ];
+        const updated = {};
+        inputs.forEach((input, i) => updated[fields[i]] = input.value);
+
+        await fetch(`${api}/${id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(updated)
+        });
+
+        inputs.forEach(input => input.readOnly = true);
+        button.textContent = 'Edit';
+        loadData();
+      } else {
+        inputs.forEach(input => input.readOnly = false);
+        button.textContent = 'Save';
+      }
+    }
+
+    async function remove(id) {
+      await fetch(`${api}/${id}`, { method: 'DELETE' });
+      loadData();
+    }
+
+    document.getElementById('addForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const d = {
+        name: name.value,
+        infantry_attack: ia.value,
+        infantry_defence: id.value,
+        infantry_lethality: il.value,
+        infantry_health: ih.value,
+        lancer_attack: la.value,
+        lancer_defence: ld.value,
+        lancer_lethality: ll.value,
+        lancer_health: lh.value,
+        marksman_attack: ma.value,
+        marksman_defence: md.value,
+        marksman_lethality: ml.value,
+        marksman_health: mh.value,
+      };
+      await fetch(api, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(d)
+      });
+      document.getElementById('addForm').reset();
+      loadData();
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
