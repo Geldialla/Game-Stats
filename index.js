@@ -8,7 +8,7 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // ✅ Serve static files from current directory
+app.use(express.static(__dirname));
 
 // GET all troop stats
 app.get('/api/stats', async (req, res) => {
@@ -64,5 +64,5 @@ app.get('/', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server running at: http://localhost:${PORT}`);
+  console.log(`✅ Server running at: ${PORT}`);
 });
